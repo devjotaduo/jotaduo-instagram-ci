@@ -84,9 +84,18 @@ jobs:
       - name: Ativar Yarn 4
         run: corepack enable
       - name: Instalar dependências
+        # Desde a 2.59 os pacotes do Twenty vêm do GitHub Packages do fork (@devjotaduo): este repositório precisa de acesso de leitura em cada pacote.
+        env:
+          NODE_AUTH_TOKEN: ${{ github.token }}
         run: yarn install --immutable
+      # Só versões com o Twenty em vendor/ (até a 2.57) têm o script.
       - name: Conferir os pacotes do Twenty em vendor
-        run: yarn vendor:verify
+        run: |
+          if node -e "process.exit(require('./package.json').scripts?.['vendor:verify'] ? 0 : 1)"; then
+            yarn vendor:verify
+          else
+            echo "Sem vendor:verify: pacotes do Twenty vêm do GitHub Packages."
+          fi
       - name: Typecheck
         run: yarn typecheck
       - name: Testes
